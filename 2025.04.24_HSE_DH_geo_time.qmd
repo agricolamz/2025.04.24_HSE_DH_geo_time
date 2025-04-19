@@ -35,21 +35,24 @@ editor_options:
 # setwd("/home/agricolamz/work/materials/2025.04.24_HSE_DH_geo_time")
 
 library(knitr)
+library(tidyverse)
+library(sf)
+library(maptiles)
+library(tidyterra)
 ```
-
 
 # Пространственные данные
 
 ## Анализ данных может включать
 
-- сбор данных
-- очистку данных и их предобработку
-- визуализацию данных
-- моделирование данных
-- дискриптивный анализ
-- предиктивный анализ
-- машинное обучение
-- ...
+-   сбор данных
+-   очистку данных и их предобработку
+-   визуализацию данных
+-   моделирование данных
+-   дискриптивный анализ
+-   предиктивный анализ
+-   машинное обучение
+-   ...
 
 ## Анализ пространственных данных --- это
 
@@ -86,17 +89,115 @@ include_graphics("images/01_geometries.png")
 
 Мне не хватает объема (т. е. учета высотности).
 
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+read_csv("data/starodub.csv") |> 
+  filter(!is.na(longitude)) |> 
+  st_as_sf(coords = c("longitude", "latitude"),
+           crs = "+proj=lonlat") |> 
+  st_transform(3857) ->
+  starodub
+
+ggplot() +
+  geom_sf(data = starodub) +
+  coord_sf(crs = 3857)+
+  theme_minimal()
+```
+
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+tile <- get_tiles(starodub, provider = "OpenStreetMap", zoom = 18)
+
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(data = starodub) +
+  coord_sf(crs = 3857)+
+  theme(text = element_text(size = 17))+
+  theme_minimal()
+```
+
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(aes(colour = gender), data = starodub) +
+  coord_sf(crs = 3857)+
+  theme_minimal()+
+  theme(text = element_text(size = 17))+
+  scale_color_manual(values = c("#ebc106", "#396c03", "grey60")) +
+  labs(color = NULL) 
+```
+
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(aes(colour = gender), 
+          data = starodub |> filter(gender != "unknown")) +
+  coord_sf(crs = 3857)+
+  theme_minimal()+
+  theme(text = element_text(size = 17))+
+  scale_color_manual(values = c("#ebc106", "#396c03")) +
+  labs(color = NULL) 
+```
+
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(aes(colour = year), 
+          data = starodub |> 
+            filter(!is.na(year))) +
+  coord_sf(crs = 3857)+
+  theme_minimal()+
+  theme(text = element_text(size = 17))+
+  scale_color_gradient(low = "darkblue", high = "tomato")+
+  labs(color = NULL)+
+  guides(alpha="none")
+```
+
+## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(aes(colour = year, alpha = new_year), 
+          data = starodub |> 
+            filter(!is.na(year)) |> 
+            mutate(new_year = 1 - (year-min(year, na.rm = TRUE))/(max(year, na.rm = TRUE)-min(year, na.rm = TRUE)))) +
+  coord_sf(crs = 3857)+
+  theme_minimal()+
+  theme(text = element_text(size = 17))+
+  scale_color_gradient(low = "darkblue", high = "tomato")+
+  labs(color = NULL)+
+  guides(alpha="none")
+```
+
+## Ошибка выжевшего: Абрахам Вальд
+
+```{r}
+#| out-width: 100%
+#| fig-align: center
+
+include_graphics("images/03_airplane.jpg")
+```
+
+
 ## Географические проекции
 
-- [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
-- [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на 2d
-- [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) есть список всех возможных проекций
+-   [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
+-   [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на 2d
+-   [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) есть список всех возможных проекций
 
 ## Динамические vs статические карты
 
-##
+## 
 
-Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции.
+Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции.
 
 # Временные данные
-
