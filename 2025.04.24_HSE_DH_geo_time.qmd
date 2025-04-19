@@ -1,0 +1,102 @@
+---
+title: Работа с гео-данными и временными данными
+subtitle: Цифровая гуманитаристика 2024/2025
+author: Г. А. Мороз
+institute: Международная лаборатория языковой конвергенции, НИУ ВШЭ
+date: 04/24/2025
+date-format: D.MM.YYYY
+format: 
+  beamer:
+    theme: Singapore
+    mainfont: Brill
+    monofont: Iosevka
+    df-print: kable
+    pdf-engine: xelatex
+    classoption: t
+    header-includes: |
+       \setbeamertemplate{footline}[page number]
+       \usepackage{caption}
+       \captionsetup[figure]{labelformat=empty}
+       \captionsetup[subfigure]{labelformat=empty}
+       \setbeamercolor{alerted text}{fg=teal}
+urlcolor: teal
+execute:
+  message: false
+  warning: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| include: false
+
+# https://martinfleischmann.net/sds/
+
+# setwd("/home/agricolamz/work/materials/2025.04.24_HSE_DH_geo_time")
+
+library(knitr)
+```
+
+
+# Пространственные данные
+
+## Анализ данных может включать
+
+- сбор данных
+- очистку данных и их предобработку
+- визуализацию данных
+- моделирование данных
+- дискриптивный анализ
+- предиктивный анализ
+- машинное обучение
+- ...
+
+## Анализ пространственных данных --- это
+
+анализ данных, который основывается на понятиях места, растояний и пространственного взаимодействия как ключевых признаков данных и использует особые инструменты и методы для хранения, визуализации и исследования такого типа данных.
+
+## Пространственные примитивы
+
+```{r}
+#| out-width: 65%
+#| fig-align: center
+
+include_graphics("images/01_geometries.png")
+```
+
+## Какие пространственные примитивы можно здесь найти?
+
+```{r}
+#| out-width: 115%
+#| fig-align: center
+
+include_graphics("images/02_dagestan.png")
+```
+
+## Чего, как Вам кажется, здесь не хватает?
+
+```{r}
+#| out-width: 65%
+#| fig-align: center
+
+include_graphics("images/01_geometries.png")
+```
+
+\pause
+
+Мне не хватает объема (т. е. учета высотности).
+
+## Географические проекции
+
+- [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
+- [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на 2d
+- [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) есть список всех возможных проекций
+
+## Динамические vs статические карты
+
+##
+
+Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции.
+
+# Временные данные
+
