@@ -31,7 +31,6 @@ editor_options:
 #| include: false
 
 # https://martinfleischmann.net/sds/
-
 # setwd("/home/agricolamz/work/materials/2025.04.24_HSE_DH_geo_time")
 
 library(knitr)
@@ -187,17 +186,57 @@ ggplot() +
 include_graphics("images/03_airplane.jpg")
 ```
 
+## Картографическая проекция
 
-## Географические проекции
+Если вы работаете с данными маленьких расстояний (особенно близкими к экватору), широту и долготу можно без страха использовать как оси в декартовой системе координат. Однако при работе с данными масштаба страны/континента/планеты такой подход не сможет игнорировать накопившуюся ошибку из-за искажений одного из следующих типов:
+
+- искажения длин
+- искажения углов
+- искажения площадей
+- искажения форм
+
+## Картографическая проекция
 
 -   [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
 -   [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на 2d
 -   [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) есть список всех возможных проекций
 
-## Динамические vs статические карты
+## Моделирование пространственных отношений
+
+## Языковое сходство рутульских идиомов
+
+```{r}
+read_csv("data/rutul_points.csv") |> 
+  st_as_sf(coords = c("lon", "lat"),
+         crs = "+proj=lonlat") |> 
+  st_transform(3857) ->
+  points
+
+read_csv("data/rutul_lines.csv") |> 
+  st_as_sf(coords = c("lon", "lat"),
+           crs = "+proj=lonlat") |> 
+  group_by(ID, linguistic_similarity) |> 
+  summarize() |> 
+  st_cast("MULTILINESTRING") |>  
+  st_transform(3857) ->
+  lines_as_st
+
+tile <- get_tiles(points, provider = "OpenTopoMap", zoom = 12)
+
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.3) +
+  geom_sf(data = lines_as_st, aes(color = linguistic_similarity), linewidth = 2)+
+  geom_sf_label(data = points, aes(label = village))+
+  theme_minimal()+
+  scale_color_gradient(low = "royalblue", high = "tomato")+
+  labs(x = NULL, y = NULL, color = NULL)
+```
+
+
+## Растровые данные
 
 ## 
 
-Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции.
+Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции, в частности за ссылку на курс Мартина Фляйшманна "Spatial Data Science for Social Geography".
 
 # Временные данные
