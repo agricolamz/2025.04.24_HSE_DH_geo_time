@@ -88,6 +88,10 @@ include_graphics("images/01_geometries.png")
 
 Мне не хватает объема (т. е. учета высотности).
 
+## Растровые данные
+
+
+
 ## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
 
 ```{r}
@@ -204,7 +208,7 @@ include_graphics("images/03_airplane.jpg")
 ```{r}
 #| layout-ncol: 2
 #| out-width: 100%
-#| fig-cap: ичтоник --- Википедия
+#| fig-cap: источник --- Википедия
 #| fig-subcap:
 #| - исходный
 #| - с сохранением площадей
@@ -215,11 +219,19 @@ include_graphics("images/08-Merkator-2.png")
 
 ## Картографическая проекция
 
--   [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
--   [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на 2d
--   [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) есть список всех возможных проекций
+- [веб-приложение](https://projectionwizard.org/), помогающее выбрать подходящую проекцию
+- [веб-приложение](https://mathigon.org/course/circles/spheres-cones-cylinders#sphere-maps), которое показывает как изменяются объекты при преобразовании с сферы на одну из четырех проекций (Меркатора, цилиндрическую, Робинсона, Моллвейде)
+- [Здесь](https://proj.org/en/latest/operations/projections/all_images.html) содержится список всех возможных проекций
 
 ## Моделирование пространственных отношений
+
+Моделирование пространственных отношений позволяет отвечать на вопросы:
+
+- Существует ли какая-то группировка значений исследуемой переменной в пространстве?
+- Правда ли, что сходные значения имеют тенденцию находиться рядом?
+- Можно ли выделить какие-то регионы концентрации каких-то из значений?
+
+Однако для ответа на все эти вопросы мы прежде всего должны построить граф соседства.
 
 ## Языковое сходство рутульских идиомов
 
@@ -285,7 +297,64 @@ include_graphics("images/06-neighbour.png")
 
 ## Пространственная автокорреляция
 
-## Растровые данные
+Для начало нужно разобраться с понятием *корреляции*. Корреляцией называют некоторую связь числовых переменных, если при изменении значения одной переменной систематически изменяется другая переменная. \pause
+
+```{r}
+#| layout-ncol: 2
+#| out-width: 100%
+#| fig-subcap:
+#| - положительная корреляция
+#| - отрицательная корреляция
+
+read_csv("data/height_weight.csv") |> 
+  ggplot(aes(weight, height))+
+  geom_smooth(method = "lm", se = FALSE, linetype = 2, color = "royalblue")+
+  geom_point(alpha = 0.4)+
+  theme_minimal()+
+  theme(text = element_text(size = 25))
+
+read_csv("data/sleep_dataset.csv") |>
+  ggplot(aes(gestation_time, total_sleep))+
+  geom_smooth(method = "lm", se = FALSE, linetype = 2, color = "royalblue")+
+  geom_point(alpha = 0.4)+
+  theme_minimal()+
+  theme(text = element_text(size = 25))+
+  labs(x = "gestation time", y = "total sleep", caption = "Allison, Cicchetti, 1976")
+```
+
+## Пространственная автокорреляция
+
+Степень в какой сходные значения находятся рядом.
+
+- положительная автокорреляция: похожие значения находятся рядом
+- отрицательная автокорреляция: похожие значения находятся далеко друг от друга
+
+\pause
+
+- глобальная: имеют ли значения тенденцию оказываться рядом с другими похожими/непохожими значениями;
+- локальная: существует ли некоторая специфический фрагментм пространства, где наблюдается необычная концентрация похожими/непохожих значений.
+
+## Значение Moran I: 
+
+```{r}
+read_csv("data/east_caucasian_morning_greetings.csv") |> 
+  st_as_sf(coords = c("lon", "lat"),
+           crs = "+proj=lonlat") |> 
+  st_transform(3857) ->
+  east_caucasian_morning_greetings
+
+tile <- get_tiles(east_caucasian_morning_greetings, provider = "OpenTopoMap", zoom = 10)
+
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(data = east_caucasian_morning_greetings, color = "black", size = 2) +
+  geom_sf(data = east_caucasian_morning_greetings, aes(color = value)) +
+  coord_sf(crs = 3857)+
+  theme(text = element_text(size = 17))+
+  theme_minimal()+
+  labs(color = NULL,
+       caption = "data Naccarato, Verhees (2021). “Morning greetings”. In: TALD")
+```
 
 ## 
 
