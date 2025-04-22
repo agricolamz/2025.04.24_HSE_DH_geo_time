@@ -38,6 +38,7 @@ library(tidyverse)
 library(sf)
 library(maptiles)
 library(tidyterra)
+library(spdep)
 ```
 
 # Пространственные данные
@@ -90,7 +91,10 @@ include_graphics("images/01_geometries.png")
 
 ## Растровые данные
 
+Иногда географические данные не представляют собой не набор пространственных примитивов.
 
+- сетка некоторой частоты, с некоторым приписанным значением каждой ячейке \pause
+- растровый объект, например, карта XVI века, которая даже не имеет привязки к современной системе координат
 
 ## Кладбище Стародуб (данные полевого архива [SFIRA](https://sfira.org/))
 
@@ -334,9 +338,27 @@ read_csv("data/sleep_dataset.csv") |>
 - глобальная: имеют ли значения тенденцию оказываться рядом с другими похожими/непохожими значениями;
 - локальная: существует ли некоторая специфический фрагментм пространства, где наблюдается необычная концентрация похожими/непохожих значений.
 
-## Значение Moran I: 
+```{r}
+#| include: false
+
+df <- read_csv("data/east_caucasian_morning_greetings.csv")
+
+df |> 
+  select(lat, lon) |> 
+  tri2nb() |> 
+  nb2listw(style="W", zero.policy=TRUE) |> 
+  moran(x = df$value |> factor() |> as.double(),
+        n = nrow(df), 
+        S0 = nrow(df),
+        listw = _) ->
+  moran_i
+```
+
+## Значение Moran I: `r moran_i$I`
 
 ```{r}
+#| include: false
+
 read_csv("data/east_caucasian_morning_greetings.csv") |> 
   st_as_sf(coords = c("lon", "lat"),
            crs = "+proj=lonlat") |> 
@@ -344,16 +366,62 @@ read_csv("data/east_caucasian_morning_greetings.csv") |>
   east_caucasian_morning_greetings
 
 tile <- get_tiles(east_caucasian_morning_greetings, provider = "OpenTopoMap", zoom = 10)
+```
 
+
+```{r}
 ggplot() +
   geom_spatraster_rgb(data = tile, alpha = 0.5) +
-  geom_sf(data = east_caucasian_morning_greetings, color = "black", size = 2) +
-  geom_sf(data = east_caucasian_morning_greetings, aes(color = value)) +
+  geom_sf(data = east_caucasian_morning_greetings, color = "black", size = 4) +
+  geom_sf(data = east_caucasian_morning_greetings, aes(color = value), size = 3) +
   coord_sf(crs = 3857)+
-  theme(text = element_text(size = 17))+
+  theme(text = element_text(size = 20))+
   theme_minimal()+
   labs(color = NULL,
-       caption = "data Naccarato, Verhees (2021). “Morning greetings”. In: TALD")
+       caption = "data Naccarato, Verhees (2021). 'Morning greetings'. In: TALD")
+```
+
+```{r}
+#| include: false
+
+df <- read_csv("data/east_caucasian_palatalized_consonants.csv")
+
+df |> 
+  select(lat, lon) |> 
+  tri2nb() |> 
+  nb2listw(style="W", zero.policy=TRUE) |> 
+  moran(x = df$value |> factor() |> as.double(),
+        n = nrow(df), 
+        S0 = nrow(df),
+        listw = _) ->
+  moran_i
+```
+
+## Значение Moran I: `r moran_i$I`
+
+```{r}
+#| include: false
+
+read_csv("data/east_caucasian_palatalized_consonants.csv") |> 
+  st_as_sf(coords = c("lon", "lat"),
+           crs = "+proj=lonlat") |> 
+  st_transform(3857) ->
+  east_caucasian_palatalized_consonants
+
+tile <- get_tiles(east_caucasian_palatalized_consonants, provider = "OpenTopoMap", zoom = 10)
+```
+
+
+```{r}
+ggplot() +
+  geom_spatraster_rgb(data = tile, alpha = 0.5) +
+  geom_sf(data = east_caucasian_palatalized_consonants, color = "black", size = 4) +
+  geom_sf(data = east_caucasian_palatalized_consonants, aes(color = value), size = 3) +
+  coord_sf(crs = 3857)+
+  theme(text = element_text(size = 20))+
+  theme_minimal()+
+  labs(color = NULL,
+       caption = "data Moroz (2021). 'Palatalized consonants'. In: TALD")
 ```
 
 ## 
@@ -361,3 +429,22 @@ ggplot() +
 Мне хочется выразить благодарность Евгению Николаевичу Матерову за его блог и телеграм-канал "Наука и данные" (<https://t.me/naukaidannye>), которые значительно упростили написание этой лекции, в частности за ссылку на курс Мартина Фляйшманна "Spatial Data Science for Social Geography".
 
 # Временные данные
+
+## Переменные бывают разные
+
+```{r}
+#| out-width: 108%
+#| fig-align: center
+
+include_graphics("images/09_time_variable.png")
+```
+
+
+## Переменные бывают разные
+
+Кажется, что время — просто обычная числовая переменная, на которой определены все обычные операции сложения вычитания и т. п. Однако стоит держать в голове несколько фактов:
+
+- Не каждый год содержит 365 дней. Существуют високосные года. \pause
+- Не каждый день содержит 24 часа. Во многих странах используют переход на летнее и зимнее время.  \pause
+- Не в каждой минуте 60 секунд. Существуют дополнительная секунда, которую добавляют чтобы компенсировать замедление во вращении земли (тогда после секунды 23:59:59 идет секунда 23:59:60). \pause
+- Григорианский календарь --- не единственный календарь на свете.
