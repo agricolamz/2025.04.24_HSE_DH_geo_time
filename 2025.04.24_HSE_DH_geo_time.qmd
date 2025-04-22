@@ -301,33 +301,6 @@ include_graphics("images/06-neighbour.png")
 
 ## Пространственная автокорреляция
 
-Для начало нужно разобраться с понятием *корреляции*. Корреляцией называют некоторую связь числовых переменных, если при изменении значения одной переменной систематически изменяется другая переменная. \pause
-
-```{r}
-#| layout-ncol: 2
-#| out-width: 100%
-#| fig-subcap:
-#| - положительная корреляция
-#| - отрицательная корреляция
-
-read_csv("data/height_weight.csv") |> 
-  ggplot(aes(weight, height))+
-  geom_smooth(method = "lm", se = FALSE, linetype = 2, color = "royalblue")+
-  geom_point(alpha = 0.4)+
-  theme_minimal()+
-  theme(text = element_text(size = 25))
-
-read_csv("data/sleep_dataset.csv") |>
-  ggplot(aes(gestation_time, total_sleep))+
-  geom_smooth(method = "lm", se = FALSE, linetype = 2, color = "royalblue")+
-  geom_point(alpha = 0.4)+
-  theme_minimal()+
-  theme(text = element_text(size = 25))+
-  labs(x = "gestation time", y = "total sleep", caption = "Allison, Cicchetti, 1976")
-```
-
-## Пространственная автокорреляция
-
 Степень в какой сходные значения находятся рядом.
 
 - положительная автокорреляция: похожие значения находятся рядом
